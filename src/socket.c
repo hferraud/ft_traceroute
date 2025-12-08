@@ -10,30 +10,19 @@
 #define SOCKET_TIMEOUT_SEC 1
 #define SOCKET_TIMEOUT_USEC 0
 
-static void set_sockopt_broadcast(int32_t socket_fd);
-static void set_sockopt_ttl(int32_t socket_fd, int32_t ttl);
+void set_ttl(int32_t socket_fd, uint8_t ttl);
 
-int32_t init_icmp_socket(command_args_t *cmd_args) {
-	int32_t socket_fd = socket(AF_INET, SOCK_RAW, IPPROTO_ICMP);
+int32_t init_socket() {
+	int32_t socket_fd = socket(AF_INET, SOCK_DGRAM, 0);
 	if (socket_fd < 0) {
 		error(EXIT_FAILURE, errno, "socket()");
 	}
-	set_sockopt_broadcast(socket_fd);
-	set_sockopt_ttl(socket_fd, cmd_args->ttl);
 	return socket_fd;
 }
 
-static void set_sockopt_broadcast(int32_t socket_fd) {
-	uint32_t optval = 1;
-	setsockopt(socket_fd, SOL_SOCKET, SO_BROADCAST, &optval, sizeof(optval));
-}
-
-static void set_sockopt_ttl(int32_t socket_fd, int32_t ttl) {
-	if (ttl == 0) {
-		return;
-	}
+void set_ttl(int32_t socket_fd, uint8_t ttl) {
 	if (setsockopt(socket_fd, IPPROTO_IP, IP_TTL, &ttl, sizeof(ttl)) < 0)
-            error(0, errno, "setsockopt(IP_TTL)");
+		error(EXIT_FAILURE, errno, "setsockopt()");
 }
 
 void dns_lookup(char* hostname, struct sockaddr_in *address) {
@@ -42,7 +31,7 @@ void dns_lookup(char* hostname, struct sockaddr_in *address) {
 	struct addrinfo *res;
 
 	hints.ai_family = AF_INET;
-	hints.ai_socktype = SOCK_RAW;
+	hints.ai_socktype = SOCK_DGRAM;
 	status = getaddrinfo(hostname, NULL, &hints, &res);
 	if (status != 0 || res == NULL) {
 		error(EXIT_FAILURE, 0, "unknown host");

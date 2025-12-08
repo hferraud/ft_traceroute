@@ -3,9 +3,8 @@
 
 #include <netinet/in.h>
 
-#include "ping.h"
-
-int32_t	init_icmp_socket(command_args_t *cmd_args);
+int32_t init_socket();
+void set_ttl(int32_t socket_fd, int32_t ttl);
 void dns_lookup(char* hostname, struct sockaddr_in *address);
 
 #endif

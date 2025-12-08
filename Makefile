@@ -2,7 +2,7 @@
 
 #---------- NAMES ----------#
 
-NAME		=		ft_ping
+NAME		=		ft_traceroute
 
 #---------- DIRECTORIES ----------#
 
@@ -15,11 +15,7 @@ BUILD_DIR	=		.build/
 SRC_FILES	=		main.c			\
 					parser.c		\
 					socket.c		\
-					ping.c			\
-					icmp.c			\
-					print.c			\
-					time.c			\
-					rtt.c			\
+					traceroute.c	\
 
 
 #---------- BUILD ----------#
