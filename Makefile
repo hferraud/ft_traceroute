@@ -4,6 +4,8 @@
 
 NAME		=		ft_traceroute
 
+DOCKER_NAME =		traceroute
+
 #---------- DIRECTORIES ----------#
 
 SRC_DIR		=		src/
@@ -15,6 +17,7 @@ BUILD_DIR	=		.build/
 SRC_FILES	=		main.c			\
 					parser.c		\
 					socket.c		\
+					icmp.c			\
 					traceroute.c	\
 
 
@@ -26,7 +29,7 @@ DEPS		=		$(addprefix $(BUILD_DIR), $(SRC:.c=.d))
 
 #---------- COMPILATION ----------#
 
-C_FLAGS		=		-Wall -Werror -Wextra
+C_FLAGS		=		-Wall -Werror -Wextra -g3
 
 I_FLAGS		=		-I$(INC_DIR)
 
@@ -60,11 +63,11 @@ re:					fclean
 
 .PHONY:				docker_build
 docker_build:
-					docker build -t ping .
+					docker build -t $(DOCKER_NAME) .
 
 .PHONY:				docker_run
 docker_run:
-					docker run --rm -it -v .:/ft_ping -it ping
+					docker run --rm -it -v .:/$(DOCKER_NAME) -it $(DOCKER_NAME)
 
 #---------- EXECUTABLES ----------#
 

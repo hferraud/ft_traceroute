@@ -6,9 +6,9 @@
 #include "traceroute.h"
 
 int main(int argc, char** argv) {
-	traceroute_info_t info;
+	traceroute_info_t info = {0};
 
-	parse(argc, argv, &info);
+	parse(argc, argv, &info.cmd_args);
 	init_traceroute(&info);
 	traceroute(&info);
 	return EXIT_SUCCESS;

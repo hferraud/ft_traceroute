@@ -1,24 +1,21 @@
 #include <string.h>
+#include <error.h>
+#include <arpa/inet.h>
 
 #include "icmp.h"
+#include "traceroute.h"
 
-static struct icmphdr create_icmp_header(ping_data_t *ping_data);
+void icmp_process_response(traceroute_response_t *response) {
+	uint16_t		checksum;
 
-void create_icmp_packet(ping_data_t *ping_data) {
-	struct icmphdr *header;
-
-	header = (struct icmphdr *)ping_data->packet;
-	*header = create_icmp_header(ping_data);
-	header->checksum = icmp_checksum(ping_data->packet, ping_data->packet_size);
-}
-
-static struct icmphdr create_icmp_header(ping_data_t *ping_data) {
-	struct icmphdr header = {0};
-
-	header.type = ping_data->type;
-	header.un.echo.id = htons(ping_data->pid);
-	header.un.echo.sequence = htons(ping_data->sequence);
-	return header;
+	response->ip_header = (struct iphdr *)response->buffer;
+	response->icmp_header = (struct icmphdr *)(response->buffer + sizeof(struct iphdr));
+	checksum = response->icmp_header->checksum;
+	response->icmp_header->checksum = 0;
+	if (checksum != icmp_checksum(response->icmp_header, response->size - sizeof(struct iphdr))) {
+		error(0, 0, "checksum mismatch from %s",
+			  inet_ntoa(response->address.sin_addr));
+	}
 }
 
 uint16_t icmp_checksum(void* packet, size_t len) {

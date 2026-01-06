@@ -1,15 +1,16 @@
 cmake_minimum_required(VERSION 3.29)
-project(ping C)
+project(traceroute C)
 
 set(CMAKE_C_STANDARD 11)
 
 include_directories(include/)
 
-add_executable(ping
+add_executable(traceroute
         src/main.c
         src/parser.c
         src/socket.c
+        src/icmp.c
         src/traceroute.c
+        src/udp.c
+        include/udp.h
 )
-
-target_link_libraries(ping m)

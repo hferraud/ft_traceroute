@@ -6,11 +6,6 @@ RUN apt-get update && apt-get install -y \
     lldb \
     wget
 
-RUN wget https://ftpmirror.gnu.org/inetutils/inetutils-2.0.tar.gz && \
-    tar -xvf inetutils-2.0.tar.gz && \
-    cd inetutils-2.0 && \
-    ./configure && \
-    make && \
-    make install
+RUN apt-get install traceroute -y
 
-WORKSPACE /ft_ping
+WORKDIR /traceroute

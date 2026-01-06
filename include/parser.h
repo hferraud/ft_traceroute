@@ -1,8 +1,15 @@
 #ifndef PING_PARSER_H
 #define PING_PARSER_H
 
-#include "traceroute.h"
+#include <stdint.h>
 
-void parse(int argc, char** argv, traceroute_info_t* traceroute_info);
+typedef struct {
+    uint16_t    port;
+    char        *host;
+    uint32_t    sim_queries;
+    uint8_t     queries;
+} command_args_t;
+
+void parse(int argc, char** argv, command_args_t* cmd_args);
 
 #endif
