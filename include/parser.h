@@ -4,10 +4,11 @@
 #include <stdint.h>
 
 typedef struct {
-    uint16_t    port;
     char        *host;
     uint32_t    sim_queries;
+    uint16_t    port;
     uint8_t     queries;
+    uint8_t     max_hops;
 } command_args_t;
 
 void parse(int argc, char** argv, command_args_t* cmd_args);

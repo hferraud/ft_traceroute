@@ -4,32 +4,28 @@
 #include <netinet/udp.h>
 #include <error.h>
 #include <errno.h>
+#include <sys/time.h>
 
 #include "traceroute.h"
 
 #define PACKET_LEN 60
-#define PROBE_NB 3
 
 static void udp_init_probe(uint8_t *buffer, uint16_t port);
 
-void udp_hop_probing(traceroute_info_t *info) {
-    uint8_t* buffer = malloc(PACKET_LEN); // TODO: call this in traceroute_init once
-    for (int i = 0; i < PROBE_NB; i++) {
-        udp_init_probe(buffer, info->cmd_args.port + info->hop * PROBE_NB + i);
-        ssize_t res = sendto(
-            info->udp_socket,
-            buffer,
-            PACKET_LEN,
-            0,
-            (struct sockaddr *)&info->address,
-            sizeof(info->address));
-        if (res == -1 || res != PACKET_LEN) {
-            free(buffer);
-            error(EXIT_FAILURE, errno, "sendto");
-            return;
-        }
+void udp_send_probe(traceroute_info_t *info, traceroute_probe_info_t *probe_info) {
+    static uint8_t buffer[PACKET_LEN];
+    udp_init_probe(buffer, probe_info->port);
+    ssize_t res = sendto(
+        info->udp_socket,
+        buffer,
+        PACKET_LEN,
+        0,
+        (struct sockaddr *)&info->address,
+        sizeof(info->address));
+    gettimeofday(&probe_info->send_time, NULL);
+    if (res == -1 || res != PACKET_LEN) {
+        error(EXIT_FAILURE, errno, "sendto");
     }
-    free(buffer);
 }
 
 static void udp_init_probe(uint8_t *buffer, uint16_t port) {

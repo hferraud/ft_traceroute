@@ -10,6 +10,7 @@
 #include <stdlib.h>
 #include <arpa/inet.h>
 #include <stdbool.h>
+#include <unistd.h>
 
 #define SELECT_SUCCESS 1
 #define SELECT_TIMEOUT 0
@@ -21,13 +22,20 @@ static int32_t traceroute_select(traceroute_info_t *info);
 static void traceroute_recv(traceroute_info_t *info, traceroute_response_t *response);
 static void traceroute_process_response(traceroute_info_t *info, traceroute_response_t *response);
 
-void init_traceroute(traceroute_info_t *info) {
+void traceroute_init(traceroute_info_t *info) {
     info->hop = 0;
     info->udp_socket = init_udp_socket();
     info->icmp_socket = init_icmp_socket();
+    info->probes_info = malloc(info->cmd_args.sim_queries * sizeof(traceroute_probe_info_t));
     dns_lookup(info->cmd_args.host, &info->address);
     info->address.sin_port = htons(info->cmd_args.port);
     printf("traceroute to %s (%s), 30 hops max, 60 byte packets\n", info->cmd_args.host, inet_ntoa(info->address.sin_addr));
+}
+
+void traceroute_cleanup(traceroute_info_t *info) {
+    close(info->udp_socket);
+    close(info->icmp_socket);
+    free(info->probes_info);
 }
 
 void traceroute(traceroute_info_t *info) {
@@ -46,8 +54,12 @@ void traceroute(traceroute_info_t *info) {
 }
 
 static void traceroute_send_probes(traceroute_info_t *info) {
-    while (info->probes_out != info->cmd_args.sim_queries) {
-        udp_hop_probing(info);
+    while (info->probes_out != info->cmd_args.sim_queries &&
+        info->probes_sent < info->cmd_args.max_hops * info->cmd_args.queries) {
+        info->probes_info[info->probes_sent].port = info->cmd_args.port + info->probes_sent;
+        udp_send_probe(info, &info->probes_info[info->probes_sent]);
+        info->probes_sent++;
+        info->probes_out++;
     }
 }
 

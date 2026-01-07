@@ -14,8 +14,10 @@
 #define PORT_MAX			UINT16_MAX
 #define SIM_QUERIES_DEFAULT	16
 #define SIM_QUERIES_MAX		UINT32_MAX
-#define	QUERIES_DEFAULT	3
-#define	QUERIES_MAX		10
+#define	QUERIES_DEFAULT		3
+#define	QUERIES_MAX			10
+#define MAX_HOPS_DEFAULT	30
+#define MAX_HOPS_MAX		255
 
 
 static error_t parse_opt(int key, char* arg, struct argp_state *state);
@@ -24,8 +26,9 @@ static size_t parse_number(const char *optarg, size_t maxval, int allow_zero);
 void parse(int argc, char** argv, command_args_t* cmd_args) {
 	const struct argp_option argp_options[] = {
 		{"port", 'p', "port", 0, "Set the destination port to use.", 0},
-		{"sim-queries", 'N', "squeries", 0, "Set the number of probes to be tried simultaneously (default is 16)", 0},
 		{"queries", 'q', "nqueries", 0, "Set the number of probes per each hop (default is 3)", 0},
+		{"max_hops", 'm', "max_ttl", 0, "Set the max number of hops (max TTL to be reached). Default is 30", 0},
+		{"sim-queries", 'N', "squeries", 0, "Set the number of probes to be tried simultaneously (default is 16)", 0},
 		{0},
 	};
 	const char args_doc[] = "HOST ...";
@@ -44,6 +47,7 @@ void parse(int argc, char** argv, command_args_t* cmd_args) {
 	cmd_args->port = PORT_DEFAULT;
 	cmd_args->queries = QUERIES_DEFAULT;
 	cmd_args->sim_queries = SIM_QUERIES_DEFAULT;
+	cmd_args->max_hops = MAX_HOPS_MAX;
 	argp_parse(&argp, argc, argv, 0, NULL, cmd_args);
 }
 
@@ -55,6 +59,9 @@ static error_t parse_opt(int key, char* arg, struct argp_state *state) {
 			break;
 		case 'q':
 			cmd_args->queries = parse_number(arg, QUERIES_MAX, 0);
+			break;
+		case 'm':
+			cmd_args->max_hops = parse_number(arg, MAX_HOPS_MAX, 0);
 			break;
 		case 'N':
 			cmd_args->sim_queries = parse_number(arg, PORT_MAX, 0);
