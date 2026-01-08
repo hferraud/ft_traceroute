@@ -9,7 +9,7 @@ int main(int argc, char** argv) {
 	traceroute_info_t info = {0};
 
 	parse(argc, argv, &info.cmd_args);
-	init_traceroute(&info);
+	traceroute_init(&info);
 	traceroute(&info);
 	return EXIT_SUCCESS;
 }

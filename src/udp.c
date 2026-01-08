@@ -14,7 +14,7 @@ static void udp_init_probe(uint8_t *buffer, uint16_t port);
 
 void udp_send_probe(traceroute_info_t *info, traceroute_probe_info_t *probe_info) {
     static uint8_t buffer[PACKET_LEN];
-    udp_init_probe(buffer, probe_info->port);
+    udp_init_probe(buffer, info->cmd_args.port + info->probes_sent);
     ssize_t res = sendto(
         info->udp_socket,
         buffer,
