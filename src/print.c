@@ -3,18 +3,22 @@
 #include <stdio.h>
 #include <arpa/inet.h>
 
+#include "time.h"
 #include "traceroute.h"
 
-void print_traceroute_probe_info(traceroute_probe_info_t *probe_info) {
-    if (probe_info->state == TIMEOUT) {
-        printf(" *");
-        return;
+void print_response(traceroute_info_t *info, traceroute_response_t *response) {
+    struct timeval elapsed_tv;
+    if (info->current_hop.address_found) {
+        printf(" %s", inet_ntoa(response->address.sin_addr));
     }
-    printf(" %s (%s)\n", probe_info->hostname, inet_ntoa(probe_info->address.sin_addr));
+    elapsed_tv = elapsed_time(info->probe_send_time, response->recv_time);
+    printf(" %f", tv_to_ms(elapsed_tv));
 }
 
-void print_hop(traceroute_info_t *info) {
-    if (info->last_hop) {
-        printf(" %d", info->current_hop);
-    }
+void print_timeout() {
+    printf(" *");
+}
+
+void print_hop(traceroute_hop_t *hop) {
+    printf("\n %d", hop->index);
 }

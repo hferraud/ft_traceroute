@@ -10,25 +10,27 @@
 #define TRACEROUTE_MIN_ARG	2
 #define TRACEROUTE_MAX_ARG	2
 
+#define FIRST_HOP_DEFAULT	1
+#define FIRST_HOP_MAX		255
+#define MAX_HOP_DEFAULT		64
+#define MAX_HOP_MAX			255
 #define PORT_DEFAULT		33434
 #define PORT_MAX			UINT16_MAX
-#define SIM_QUERIES_DEFAULT	16
-#define SIM_QUERIES_MAX		UINT32_MAX
-#define	QUERIES_DEFAULT		3
-#define	QUERIES_MAX			10
-#define MAX_HOPS_DEFAULT	30
-#define MAX_HOPS_MAX		255
-
+#define TRIES_DEFAULT		3
+#define TRIES_MAX			10
+#define WAIT_DEFAULT		3
+#define WAIT_MAX			60
 
 static error_t parse_opt(int key, char* arg, struct argp_state *state);
 static size_t parse_number(const char *optarg, size_t maxval, int allow_zero);
 
 void parse(int argc, char** argv, command_args_t* cmd_args) {
 	const struct argp_option argp_options[] = {
-		{"port", 'p', "port", 0, "Set the destination port to use.", 0},
-		{"queries", 'q', "nqueries", 0, "Set the number of probes per each hop (default is 3)", 0},
-		{"max_hops", 'm', "max_ttl", 0, "Set the max number of hops (max TTL to be reached). Default is 30", 0},
-		{"sim-queries", 'N', "squeries", 0, "Set the number of probes to be tried simultaneously (default is 16)", 0},
+		{"first-hop", 'f', "NUM", 0, "set initial hop distance, i.e., time-to-live", 0},
+		{"max-hop", 'm', "NUM", 0, "set maximal hop count (default: 64)", 0},
+		{"port", 'p', "PORT", 0, "use destination PORT port (default: 33434)", 0},
+		{"tries", 'q', "NUM", 0, "send NUM probe packets per hop (default: 3)", 0},
+		{"wait", 'w', "NUM", 0, "wait NUM seconds for response (default: 3)", 0},
 		{0},
 	};
 	const char args_doc[] = "HOST ...";
@@ -44,27 +46,31 @@ void parse(int argc, char** argv, command_args_t* cmd_args) {
 			NULL,
 			NULL,
 	};
+	cmd_args->first_hop = FIRST_HOP_DEFAULT;
+	cmd_args->max_hop = MAX_HOP_DEFAULT;
 	cmd_args->port = PORT_DEFAULT;
-	cmd_args->queries = QUERIES_DEFAULT;
-	cmd_args->sim_queries = SIM_QUERIES_DEFAULT;
-	cmd_args->max_hops = MAX_HOPS_MAX;
+	cmd_args->tries = TRIES_DEFAULT;
+	cmd_args->wait = WAIT_DEFAULT;
 	argp_parse(&argp, argc, argv, 0, NULL, cmd_args);
 }
 
 static error_t parse_opt(int key, char* arg, struct argp_state *state) {
 	command_args_t *cmd_args = state->input;
 	switch (key) {
+		case 'f':
+			cmd_args->first_hop = parse_number(arg, FIRST_HOP_MAX, 0);
+			break;
+		case 'm':
+			cmd_args->max_hop = parse_number(arg, MAX_HOP_MAX, 0);
+			break;
 		case 'p':
 			cmd_args->port = parse_number(arg, PORT_MAX, 0);
 			break;
 		case 'q':
-			cmd_args->queries = parse_number(arg, QUERIES_MAX, 0);
+			cmd_args->tries = parse_number(arg, TRIES_MAX, 0);
 			break;
-		case 'm':
-			cmd_args->max_hops = parse_number(arg, MAX_HOPS_MAX, 0);
-			break;
-		case 'N':
-			cmd_args->sim_queries = parse_number(arg, PORT_MAX, 0);
+		case 'w':
+			cmd_args->wait = parse_number(arg, WAIT_MAX, 0);
 			break;
 		case ARGP_KEY_ARG:
 			if (state->arg_num > TRACEROUTE_MAX_ARG) {

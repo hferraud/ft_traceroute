@@ -12,5 +12,6 @@ add_executable(traceroute
         src/icmp.c
         src/traceroute.c
         src/udp.c
-        include/udp.h
+        src/time.c
+        src/print.c
 )

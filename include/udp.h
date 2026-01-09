@@ -3,6 +3,6 @@
 
 #include "traceroute.h"
 
-void udp_send_probe(traceroute_info_t *info, traceroute_probe_info_t *probe_info);
+void udp_send_probe(traceroute_info_t *info);
 
 #endif //UDP_H

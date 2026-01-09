@@ -12,9 +12,9 @@
 
 static void udp_init_probe(uint8_t *buffer, uint16_t port);
 
-void udp_send_probe(traceroute_info_t *info, traceroute_probe_info_t *probe_info) {
+void udp_send_probe(traceroute_info_t *info) {
     static uint8_t buffer[PACKET_LEN];
-    udp_init_probe(buffer, info->cmd_args.port + info->probes_sent);
+    udp_init_probe(buffer, info->cmd_args.port + info->probe_sent);
     ssize_t res = sendto(
         info->udp_socket,
         buffer,
@@ -22,7 +22,7 @@ void udp_send_probe(traceroute_info_t *info, traceroute_probe_info_t *probe_info
         0,
         (struct sockaddr *)&info->address,
         sizeof(info->address));
-    gettimeofday(&probe_info->send_time, NULL);
+    gettimeofday(&info->probe_send_time, NULL);
     if (res == -1 || res != PACKET_LEN) {
         error(EXIT_FAILURE, errno, "sendto");
     }
@@ -32,7 +32,7 @@ static void udp_init_probe(uint8_t *buffer, uint16_t port) {
     size_t packet_len = PACKET_LEN - sizeof(struct iphdr);
 
     struct udphdr *udp_header = (struct udphdr *)buffer;
-    udp_header->dest = htonl(port);
+    udp_header->dest = htons(port);
     udp_header->len = htons(packet_len);
 }
 
