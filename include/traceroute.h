@@ -12,10 +12,12 @@
 
 
 typedef struct {
-    uint8_t index;
-    uint8_t probe_index;
-    bool address_found;
-    bool last_hop;
+    uint8_t             index;
+    uint8_t             probe_index;
+    bool                address_found;
+    bool                last_hop;
+    struct sockaddr_in	address;
+    float               rtt[TRIES_MAX];
 } traceroute_hop_t;
 
 typedef struct {

@@ -8,32 +8,22 @@
 
 #include "traceroute.h"
 
-#define PACKET_LEN 60
-
-static void udp_init_probe(uint8_t *buffer, uint16_t port);
+#define DATA "SUPERMAN"
+#define DATA_LEN 9
 
 void udp_send_probe(traceroute_info_t *info) {
-    static uint8_t buffer[PACKET_LEN];
-    udp_init_probe(buffer, info->cmd_args.port + info->probe_sent);
+    info->address.sin_port = htons(info->cmd_args.port + info->probe_sent);
     ssize_t res = sendto(
         info->udp_socket,
-        buffer,
-        PACKET_LEN,
+        DATA,
+        DATA_LEN,
         0,
         (struct sockaddr *)&info->address,
         sizeof(info->address));
     gettimeofday(&info->probe_send_time, NULL);
-    if (res == -1 || res != PACKET_LEN) {
+    if (res == -1 || res != DATA_LEN) {
         error(EXIT_FAILURE, errno, "sendto");
     }
-}
-
-static void udp_init_probe(uint8_t *buffer, uint16_t port) {
-    size_t packet_len = PACKET_LEN - sizeof(struct iphdr);
-
-    struct udphdr *udp_header = (struct udphdr *)buffer;
-    udp_header->dest = htons(port);
-    udp_header->len = htons(packet_len);
 }
 
 

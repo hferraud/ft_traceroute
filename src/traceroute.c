@@ -36,8 +36,9 @@ void traceroute_init(traceroute_info_t *info) {
     dns_lookup(info->cmd_args.host, &info->address);
     info->address.sin_port = htons(info->cmd_args.port);
     info->current_hop.index = info->cmd_args.first_hop;
-    //TODO: move this
-    printf("traceroute to %s (%s), 30 hops max, 60 byte packets\n", info->cmd_args.host, inet_ntoa(info->address.sin_addr));
+    for (size_t i = 0; i < TRIES_MAX; i++) {
+        info->current_hop.rtt[i] = -1;
+    }
 }
 
 void traceroute_cleanup(traceroute_info_t *info) {
@@ -48,7 +49,9 @@ void traceroute_cleanup(traceroute_info_t *info) {
 void traceroute(traceroute_info_t *info) {
     traceroute_response_t response;
 
-    while (!(info->current_hop.last_hop && info->current_hop.index != info->cmd_args.tries)) {
+    print_traceroute(info);
+    print_hop(&info->current_hop);
+    while (!(info->current_hop.last_hop && info->current_hop.probe_index == info->cmd_args.tries)) {
         traceroute_send_probe(info);
         if (traceroute_select(info) == SELECT_SUCCESS) {
             traceroute_recv(info, &response);
@@ -98,7 +101,6 @@ static void traceroute_recv(traceroute_info_t *info, traceroute_response_t *resp
         error(EXIT_FAILURE, errno, "recvfrom");
     }
     response->size = status;
-    // printf("Receive a response of size %zu\n", response->size);
 }
 
 static void traceroute_process_response(traceroute_info_t *info, traceroute_response_t *response) {
@@ -118,19 +120,33 @@ static void traceroute_process_response(traceroute_info_t *info, traceroute_resp
     }
     if (response->icmp_header->type == ICMP_UNREACH) {
         info->current_hop.last_hop = true;
+        info->current_hop.address = response->address;
+        info->current_hop.address_found = true;
     }
-    info->current_hop.address_found = true;
-    print_response(info, response);
+    if (!info->current_hop.address_found) {
+        info->current_hop.address_found = true;
+        info->current_hop.address = response->address;
+    }
+    size_t i;
+    for (i = 0; i < TRIES_MAX; i++) {
+        if (info->current_hop.rtt[i] == -1) {
+            break;
+        }
+    }
+    info->current_hop.rtt[i] = tv_to_ms(elapsed_time(info->probe_send_time, response->recv_time));
 }
 
 static void traceroute_update(traceroute_info_t *info) {
     info->current_hop.probe_index++;
-    if (info->current_hop.last_hop) {
-        return;
-    }
     if (info->current_hop.probe_index == info->cmd_args.tries) {
+        // We jump to next hop
+        print_hop_probes(&info->current_hop);
+        if (info->current_hop.last_hop) {
+            return;
+        }
         info->current_hop.probe_index = 0;
         info->current_hop.index++;
+        info->current_hop.address_found = false;
         print_hop(&info->current_hop);
         if (info->current_hop.index == info->cmd_args.max_hop) {
             info->current_hop.last_hop = true;

@@ -13,7 +13,7 @@
 void set_ttl(int32_t socket_fd, uint8_t ttl);
 
 int32_t init_udp_socket() {
-	int32_t socket_fd = socket(AF_INET, SOCK_DGRAM, 0);
+	int32_t socket_fd = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
 	if (socket_fd < 0) {
 		error(EXIT_FAILURE, errno, "socket()");
 	}

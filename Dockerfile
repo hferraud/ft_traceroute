@@ -6,6 +6,6 @@ RUN apt-get update && apt-get install -y \
     lldb \
     wget
 
-RUN apt-get install traceroute -y
+RUN apt-get install inetutils-traceroute -y
 
 WORKDIR /traceroute

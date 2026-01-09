@@ -10,17 +10,6 @@
 #define TRACEROUTE_MIN_ARG	2
 #define TRACEROUTE_MAX_ARG	2
 
-#define FIRST_HOP_DEFAULT	1
-#define FIRST_HOP_MAX		255
-#define MAX_HOP_DEFAULT		64
-#define MAX_HOP_MAX			255
-#define PORT_DEFAULT		33434
-#define PORT_MAX			UINT16_MAX
-#define TRIES_DEFAULT		3
-#define TRIES_MAX			10
-#define WAIT_DEFAULT		3
-#define WAIT_MAX			60
-
 static error_t parse_opt(int key, char* arg, struct argp_state *state);
 static size_t parse_number(const char *optarg, size_t maxval, int allow_zero);
 
