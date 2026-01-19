@@ -24,7 +24,7 @@
 static void traceroute_send_probe(traceroute_info_t *info);
 static int32_t traceroute_select(traceroute_info_t *info);
 static void traceroute_recv(traceroute_info_t *info, traceroute_response_t *response);
-static void traceroute_process_response(traceroute_info_t *info, traceroute_response_t *response);
+static int32_t traceroute_process_response(traceroute_info_t *info, traceroute_response_t *response);
 static void traceroute_update(traceroute_info_t *info);
 
 void traceroute_init(traceroute_info_t *info) {
@@ -35,6 +35,7 @@ void traceroute_init(traceroute_info_t *info) {
     info->current_hop.index = info->cmd_args.first_hop;
     for (size_t i = 0; i < TRIES_MAX; i++) {
         info->current_hop.rtt[i] = -1;
+        info->current_hop.unreach_code[i] = -1;
     }
 }
 
@@ -50,11 +51,16 @@ void traceroute(traceroute_info_t *info) {
     print_hop(info);
     while (!(info->current_hop.last_hop && info->current_hop.probe_index == info->cmd_args.tries)) {
         traceroute_send_probe(info);
-        if (traceroute_select(info) == SELECT_SUCCESS) {
-            traceroute_recv(info, &response);
-            traceroute_process_response(info, &response);
-        } else {
-            print_timeout();
+        while (1) {
+            if (traceroute_select(info) == SELECT_SUCCESS) {
+                traceroute_recv(info, &response);
+                if (traceroute_process_response(info, &response) == 0) {
+                    break;
+                }
+            } else {
+                print_timeout();
+                break;
+            }
         }
         traceroute_update(info);
     }
@@ -111,37 +117,40 @@ static void traceroute_recv(traceroute_info_t *info, traceroute_response_t *resp
     response->size = status;
 }
 
-static void traceroute_process_response(traceroute_info_t *info, traceroute_response_t *response) {
+/**
+ * @return 0 if the response was correctly processed, -1 otherwise
+ */
+static int32_t traceroute_process_response(traceroute_info_t *info, traceroute_response_t *response) {
     struct udphdr *udp_header;
 
-    icmp_process_response(response);
-    if (response->icmp_header->type != ICMP_TIME_EXCEEDED &&
-        (response->icmp_header->type != ICMP_UNREACH && response->icmp_header->code != ICMP_PORT_UNREACH)) {
-        printf("Dropping ICMP packet type=%d, code=%d\n", response->icmp_header->type, response->icmp_header->code);
-        return;
+    if (icmp_process_response(response) == -1) {
+        return -1;
+    }
+    // TODO: just drop the packet if icmp_process_response fail
+    if (response->icmp_header->type == ICMP_UNREACH) {
+        if (response->icmp_header->code == ICMP_PORT_UNREACH) {
+            info->current_hop.address = response->address;
+            info->current_hop.address_found = true;
+            info->current_hop.last_hop = true;
+        }
+        else {
+            info->current_hop.unreach_code[info->current_hop.probe_index] = (int8_t)response->icmp_header->code;
+            info->current_hop.last_hop = true;
+        }
+    } else if (response->icmp_header->type != ICMP_TIME_EXCEEDED) {
+        return -1;
     }
     udp_header = (struct udphdr *) (response->buffer + sizeof(struct iphdr) * 2 + sizeof(struct icmphdr));
     if (ntohs(udp_header->dest) != info->cmd_args.port + info->probe_sent - 1) {
         // The udp port of the response don't correspond to the probe we sent
-        // TODO: change this, just drop the packet
-        error(EXIT_FAILURE, 0, "udp dest mismatch in response sent=%lu received=%u", info->cmd_args.port + info->probe_sent - 1, ntohs(udp_header->dest));
-    }
-    if (response->icmp_header->type == ICMP_UNREACH) {
-        info->current_hop.last_hop = true;
-        info->current_hop.address = response->address;
-        info->current_hop.address_found = true;
+        return -1;
     }
     if (!info->current_hop.address_found) {
         info->current_hop.address_found = true;
         info->current_hop.address = response->address;
     }
-    size_t i;
-    for (i = 0; i < TRIES_MAX; i++) {
-        if (info->current_hop.rtt[i] == -1) {
-            break;
-        }
-    }
-    info->current_hop.rtt[i] = tv_to_ms(elapsed_time(info->probe_send_time, response->recv_time));
+    info->current_hop.rtt[info->current_hop.probe_index] = tv_to_ms(elapsed_time(info->probe_send_time, response->recv_time));
+    return 0;
 }
 
 static void traceroute_update(traceroute_info_t *info) {

@@ -5,7 +5,10 @@
 #include "icmp.h"
 #include "traceroute.h"
 
-void icmp_process_response(traceroute_response_t *response) {
+/**
+ * @return 0 if the icmp packet was correctly processed, -1 otherwise
+ */
+int32_t icmp_process_response(traceroute_response_t *response) {
 	uint16_t		checksum;
 
 	response->ip_header = (struct iphdr *)response->buffer;
@@ -13,9 +16,9 @@ void icmp_process_response(traceroute_response_t *response) {
 	checksum = response->icmp_header->checksum;
 	response->icmp_header->checksum = 0;
 	if (checksum != icmp_checksum(response->icmp_header, response->size - sizeof(struct iphdr))) {
-		error(0, 0, "checksum mismatch from %s",
-			  inet_ntoa(response->address.sin_addr));
+		return -1;
 	}
+	return 0;
 }
 
 uint16_t icmp_checksum(void* packet, size_t len) {

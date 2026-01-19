@@ -9,7 +9,6 @@
 
 #include "parser.h"
 
-//TODO Get the real max size
 #define TRACEROUTE_DATA "SUPERMAN"
 #define TRACEROUTE_DATA_LEN 9
 #define TRACEROUTE_RESPONSE_MAX_SIZE (sizeof(struct iphdr) * 2 + sizeof(struct icmphdr) + sizeof(struct udphdr) + TRACEROUTE_DATA_LEN)
@@ -21,6 +20,7 @@ typedef struct {
     bool                last_hop;
     struct sockaddr_in	address;
     float               rtt[TRIES_MAX];
+    int8_t              unreach_code[TRIES_MAX];
 } traceroute_hop_t;
 
 typedef struct {
