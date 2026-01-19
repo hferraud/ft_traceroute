@@ -139,11 +139,12 @@ static int32_t traceroute_process_response(traceroute_info_t *info, traceroute_r
         }
     } else if (response->icmp_header->type != ICMP_TIME_EXCEEDED) {
         return -1;
-    }
-    udp_header = (struct udphdr *) (response->buffer + sizeof(struct iphdr) * 2 + sizeof(struct icmphdr));
-    if (ntohs(udp_header->dest) != info->cmd_args.port + info->probe_sent - 1) {
-        // The udp port of the response don't correspond to the probe we sent
-        return -1;
+    } else {
+        udp_header = (struct udphdr *) (response->buffer + sizeof(struct iphdr) * 2 + sizeof(struct icmphdr));
+        if (ntohs(udp_header->dest) != info->cmd_args.port + info->probe_sent - 1) {
+            // The udp port of the response don't correspond to the probe we sent
+            return -1;
+        }
     }
     if (!info->current_hop.address_found) {
         info->current_hop.address_found = true;
