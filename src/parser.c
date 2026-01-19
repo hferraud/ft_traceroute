@@ -83,12 +83,9 @@ static size_t parse_number(const char *optarg, size_t maxval, int allow_zero) {
 	n = strtoul(optarg, &p, 0);
 	if (*p)
 		error(EXIT_FAILURE, 0, "invalid value (`%s' near `%s')", optarg, p);
-
 	if (n == 0 && !allow_zero)
 		error(EXIT_FAILURE, 0, "option value too small: %s", optarg);
-
 	if (maxval && n > maxval)
 		error(EXIT_FAILURE, 0, "option value too big: %s", optarg);
-
 	return n;
 }

@@ -17,7 +17,7 @@ void print_hop_probes(traceroute_hop_t *hop) {
     if (hop->address_found) {
         printf(" %s ", inet_ntoa(hop->address.sin_addr));
     }
-    while (hop->rtt[i] != -1) {
+    while (i < TRIES_MAX && hop->rtt[i] != -1) {
         printf(" %.3fms ", hop->rtt[i]);
         hop->rtt[i] = -1;
         i++;
@@ -30,6 +30,6 @@ void print_timeout() {
     fflush(STDIN_FILENO);
 }
 
-void print_hop(traceroute_hop_t *hop) {
-    printf("%3d  ", hop->index);
+void print_hop(traceroute_info_t *info) {
+    printf("%3d  ", info->current_hop.index - info->cmd_args.first_hop + 1);
 }

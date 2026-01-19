@@ -11,7 +11,6 @@ add_executable(traceroute
         src/socket.c
         src/icmp.c
         src/traceroute.c
-        src/udp.c
         src/time.c
         src/print.c
 )

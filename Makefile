@@ -19,7 +19,6 @@ SRC_FILES	=		main.c			\
 					socket.c		\
 					icmp.c			\
 					traceroute.c	\
-					udp.c			\
 					print.c			\
 					time.c			\
 

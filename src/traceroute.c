@@ -2,17 +2,14 @@
 
 #include "socket.h"
 #include "icmp.h"
-#include "udp.h"
 #include "print.h"
 
 #include <error.h>
 #include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <arpa/inet.h>
 #include <netinet/udp.h>
 #include <stdbool.h>
-#include <string.h>
 #include <unistd.h>
 #include <sys/time.h>
 
@@ -23,6 +20,9 @@
 #define SELECT_SUCCESS 1
 #define SELECT_TIMEOUT 0
 #define SELECT_ERROR 0
+
+#define TRACEROUTE_DATA "SUPERMAN"
+#define TRACEROUTE_DATA_LEN 9
 
 static void traceroute_send_probe(traceroute_info_t *info);
 static int32_t traceroute_select(traceroute_info_t *info);
@@ -50,7 +50,7 @@ void traceroute(traceroute_info_t *info) {
     traceroute_response_t response;
 
     print_traceroute(info);
-    print_hop(&info->current_hop);
+    print_hop(info);
     while (!(info->current_hop.last_hop && info->current_hop.probe_index == info->cmd_args.tries)) {
         traceroute_send_probe(info);
         if (traceroute_select(info) == SELECT_SUCCESS) {
@@ -65,7 +65,18 @@ void traceroute(traceroute_info_t *info) {
 
 static void traceroute_send_probe(traceroute_info_t *info) {
     set_ttl(info->udp_socket, info->current_hop.index);
-    udp_send_probe(info);
+    info->address.sin_port = htons(info->cmd_args.port + info->probe_sent);
+    ssize_t res = sendto(
+        info->udp_socket,
+        TRACEROUTE_DATA,
+        TRACEROUTE_DATA_LEN,
+        0,
+        (struct sockaddr *)&info->address,
+        sizeof(info->address));
+    gettimeofday(&info->probe_send_time, NULL);
+    if (res == -1 || res != TRACEROUTE_DATA_LEN) {
+        error(EXIT_FAILURE, errno, "sendto");
+    }
     info->probe_sent++;
 }
 
@@ -147,7 +158,7 @@ static void traceroute_update(traceroute_info_t *info) {
         info->current_hop.probe_index = 0;
         info->current_hop.index++;
         info->current_hop.address_found = false;
-        print_hop(&info->current_hop);
+        print_hop(info);
         if (info->current_hop.index == info->cmd_args.max_hop) {
             info->current_hop.last_hop = true;
         }

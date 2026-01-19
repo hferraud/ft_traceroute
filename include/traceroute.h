@@ -8,8 +8,8 @@
 
 #include "parser.h"
 
+//TODO Get the real max size
 #define RESPONSE_MAX_SIZE (sizeof(struct iphdr) * 2 + sizeof(struct icmphdr) * 2 + 100)
-
 
 typedef struct {
     uint8_t             index;
