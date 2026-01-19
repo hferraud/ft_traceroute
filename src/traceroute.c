@@ -21,9 +21,6 @@
 #define SELECT_TIMEOUT 0
 #define SELECT_ERROR 0
 
-#define TRACEROUTE_DATA "SUPERMAN"
-#define TRACEROUTE_DATA_LEN 9
-
 static void traceroute_send_probe(traceroute_info_t *info);
 static int32_t traceroute_select(traceroute_info_t *info);
 static void traceroute_recv(traceroute_info_t *info, traceroute_response_t *response);
@@ -102,7 +99,7 @@ static void traceroute_recv(traceroute_info_t *info, traceroute_response_t *resp
     status = recvfrom(
         info->icmp_socket,
         response->buffer,
-        RESPONSE_MAX_SIZE,
+        TRACEROUTE_RESPONSE_MAX_SIZE,
         0,
         (struct sockaddr *) &response->address,
         &address_len

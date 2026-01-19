@@ -4,12 +4,15 @@
 #include <netinet/in.h>
 #include <netinet/ip.h>
 #include <netinet/ip_icmp.h>
+#include <netinet/udp.h>
 #include <stdbool.h>
 
 #include "parser.h"
 
 //TODO Get the real max size
-#define RESPONSE_MAX_SIZE (sizeof(struct iphdr) * 2 + sizeof(struct icmphdr) * 2 + 100)
+#define TRACEROUTE_DATA "SUPERMAN"
+#define TRACEROUTE_DATA_LEN 9
+#define TRACEROUTE_RESPONSE_MAX_SIZE (sizeof(struct iphdr) * 2 + sizeof(struct icmphdr) + sizeof(struct udphdr) + TRACEROUTE_DATA_LEN)
 
 typedef struct {
     uint8_t             index;
@@ -32,7 +35,7 @@ typedef struct {
 
 
 typedef struct {
-    uint8_t             buffer[RESPONSE_MAX_SIZE];
+    uint8_t             buffer[TRACEROUTE_RESPONSE_MAX_SIZE];
     size_t              size;
     struct sockaddr_in	address;
     struct iphdr        *ip_header;
