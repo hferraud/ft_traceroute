@@ -11,5 +11,6 @@ int main(int argc, char** argv) {
 	parse(argc, argv, &info.cmd_args);
 	traceroute_init(&info);
 	traceroute(&info);
+	traceroute_cleanup(&info);
 	return EXIT_SUCCESS;
 }

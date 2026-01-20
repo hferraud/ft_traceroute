@@ -47,22 +47,3 @@ void dns_lookup(char* hostname, struct sockaddr_in *address) {
 	*address = *(struct sockaddr_in *)res->ai_addr;
 	freeaddrinfo(res);
 }
-
-void reverse_dns_lookup(const struct sockaddr_in *address, char *hostname, size_t hostname_len) {
-	int32_t status;
-
-	status = getnameinfo(
-		(const struct sockaddr *)address,
-		sizeof(*address),
-		hostname,
-		hostname_len,
-		NULL,
-		0,
-		0
-	);
-
-	if (status != 0) {
-		error(EXIT_FAILURE, 0, "getnameinfo()");
-	}
-}
-

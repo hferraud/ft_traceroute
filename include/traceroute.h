@@ -45,5 +45,6 @@ typedef struct {
 
 void traceroute_init(traceroute_info_t *info);
 void traceroute(traceroute_info_t *info);
+void traceroute_cleanup(traceroute_info_t *info);
 
 #endif //TRACEROUTE_H

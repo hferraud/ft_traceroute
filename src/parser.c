@@ -6,12 +6,13 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <argp.h>
+#include <unistd.h>
 
-#define TRACEROUTE_MIN_ARG	2
-#define TRACEROUTE_MAX_ARG	2
+#define TRACEROUTE_MIN_ARG	1
+#define TRACEROUTE_MAX_ARG	1
 
 static error_t parse_opt(int key, char* arg, struct argp_state *state);
-static size_t parse_number(const char *optarg, size_t maxval, int allow_zero);
+static int32_t parse_number(const char *optarg, size_t maxval, int allow_zero, unsigned long *result);
 
 void parse(int argc, char** argv, command_args_t* cmd_args) {
 	const struct argp_option argp_options[] = {
@@ -47,19 +48,34 @@ static error_t parse_opt(int key, char* arg, struct argp_state *state) {
 	command_args_t *cmd_args = state->input;
 	switch (key) {
 		case 'f':
-			cmd_args->first_hop = parse_number(arg, FIRST_HOP_MAX, 0);
+			if (parse_number(arg, FIRST_HOP_MAX, 0, (unsigned long *)&cmd_args->first_hop) == -1) {
+				dprintf(STDERR_FILENO, "%s: impossible distance '%s'\n", state->argv[0], arg);
+				exit(EXIT_FAILURE);
+			}
 			break;
 		case 'm':
-			cmd_args->max_hop = parse_number(arg, MAX_HOP_MAX, 0);
+			if (parse_number(arg, MAX_HOP_MAX, 0, (unsigned long *)&cmd_args->max_hop) == -1) {
+				dprintf(STDERR_FILENO, "%s: invalid hops value '%s'\n", state->argv[0], arg);
+				exit(EXIT_FAILURE);
+			}
 			break;
 		case 'p':
-			cmd_args->port = parse_number(arg, PORT_MAX, 0);
+			if (parse_number(arg, PORT_MAX, 0, (unsigned long *)&cmd_args->port) == -1) {
+				dprintf(STDERR_FILENO, "%s: invalid port number '%s'\n", state->argv[0], arg);
+				exit(EXIT_FAILURE);
+			}
 			break;
 		case 'q':
-			cmd_args->tries = parse_number(arg, TRIES_MAX, 0);
+			if (parse_number(arg, TRIES_MAX, 0, (unsigned long *)&cmd_args->tries) == -1) {
+				dprintf(STDERR_FILENO, "%s: number of tries should be between 1 and 10\n", state->argv[0]);
+				exit(EXIT_FAILURE);
+			}
 			break;
 		case 'w':
-			cmd_args->wait = parse_number(arg, WAIT_MAX, 0);
+			if (parse_number(arg, WAIT_MAX, 0, (unsigned long *)&cmd_args->wait) == -1) {
+				dprintf(STDERR_FILENO, "%s: ridiculous waiting time '%s'\n", state->argv[0], arg);
+				exit(EXIT_FAILURE);
+			}
 			break;
 		case ARGP_KEY_ARG:
 			if (state->arg_num > TRACEROUTE_MAX_ARG) {
@@ -76,16 +92,18 @@ static error_t parse_opt(int key, char* arg, struct argp_state *state) {
 	return 0;
 }
 
-static size_t parse_number(const char *optarg, size_t maxval, int allow_zero) {
+static int32_t parse_number(const char *optarg, size_t maxval, int allow_zero, unsigned long *result) {
 	char *p;
-	unsigned long int n;
 
-	n = strtoul(optarg, &p, 0);
-	if (*p)
-		error(EXIT_FAILURE, 0, "invalid value (`%s' near `%s')", optarg, p);
-	if (n == 0 && !allow_zero)
-		error(EXIT_FAILURE, 0, "option value too small: %s", optarg);
-	if (maxval && n > maxval)
-		error(EXIT_FAILURE, 0, "option value too big: %s", optarg);
-	return n;
+	*result = strtoul(optarg, &p, 0);
+	if (*p) {
+		return -1;
+	}
+	if (*result == 0 && !allow_zero) {
+		return -1;
+	}
+	if (maxval && *result > maxval) {
+		return -1;
+	}
+	return 0;
 }

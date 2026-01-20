@@ -1,6 +1,4 @@
 #include <string.h>
-#include <error.h>
-#include <arpa/inet.h>
 
 #include "icmp.h"
 #include "traceroute.h"

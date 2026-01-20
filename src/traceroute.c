@@ -126,7 +126,6 @@ static int32_t traceroute_process_response(traceroute_info_t *info, traceroute_r
     if (icmp_process_response(response) == -1) {
         return -1;
     }
-    // TODO: just drop the packet if icmp_process_response fail
     if (response->icmp_header->type == ICMP_UNREACH) {
         if (response->icmp_header->code == ICMP_PORT_UNREACH) {
             info->current_hop.address = response->address;
