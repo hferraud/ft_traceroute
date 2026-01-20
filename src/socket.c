@@ -7,9 +7,6 @@
 
 #include "ping.h"
 
-#define SOCKET_TIMEOUT_SEC 1
-#define SOCKET_TIMEOUT_USEC 0
-
 void set_ttl(int32_t socket_fd, uint8_t ttl);
 
 int32_t init_udp_socket() {
